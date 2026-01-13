@@ -15,5 +15,5 @@ def test_import_progress_dry_run(tmp_path):
     res = subprocess.run(["python3", "import_articoli_to_sqlite.py", str(file_path), "--db", str(db_path), "--dry-run", "--progress"], capture_output=True, text=True)
     print(res.stdout)
     assert res.returncode == 0
-    # Check that dry-run line appears (DRY-RUN or similar)
-    assert 'DRY-RUN' in res.stdout or 'Importazione' in res.stdout
+    # Check that progress bar or summary appears (robust vs logging level)
+    assert '1/1' in res.stdout or '100.0%' in res.stdout or 'Totale nel database' in res.stdout
