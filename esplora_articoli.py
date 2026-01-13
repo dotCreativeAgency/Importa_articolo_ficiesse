@@ -320,10 +320,11 @@ class ArticoliExplorer:
         )
         return len(html_tags) > 0
 
-    def export_article(self, article, interactive=True):
+    def export_article(self, article, interactive=True, mark_exported: bool = False):
         """Esporta l'articolo in formato DOCX.
 
         Se interactive è False: non chiedere input; restituisci il percorso del file.
+        Se `mark_exported` True, marca il record (esportato=1) dopo il salvataggio.
         """
         if not DOCX_AVAILABLE:
             if interactive:
@@ -342,8 +343,12 @@ class ArticoliExplorer:
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
         # Sottotitolo
-        if article["sotto_titolo"]:
-            subtitle = doc.add_paragraph(article["sotto_titolo"])
+        try:
+            sotto = article["sotto_titolo"]
+        except Exception:
+            sotto = None
+        if sotto:
+            subtitle = doc.add_paragraph(sotto)
             subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
             for run in subtitle.runs:
                 run.italic = True
@@ -352,17 +357,28 @@ class ArticoliExplorer:
         doc.add_paragraph()
         meta = doc.add_paragraph()
         meta.add_run("Data: ").bold = True
-        meta.add_run(str(article["data"] or "N/D"))
+        try:
+            data_val = article["data"]
+        except Exception:
+            data_val = None
+        meta.add_run(str(data_val or "N/D"))
         meta.add_run("  |  ")
         meta.add_run("Argomento: ").bold = True
-        meta.add_run(str(article["argomento"] or "N/D"))
+        try:
+            arg_val = article["argomento"]
+        except Exception:
+            arg_val = None
+        meta.add_run(str(arg_val or "N/D"))
 
         doc.add_paragraph()
         doc.add_paragraph("─" * 50)
         doc.add_paragraph()
 
         # Contenuto - pulisci prima il testo
-        testo_raw = article["testo_articolo"] or ""
+        try:
+            testo_raw = article["testo_articolo"]
+        except Exception:
+            testo_raw = ""
         testo_pulito = self._clean_text_content(testo_raw)
 
         # Verifica se è HTML vero o testo semplice
@@ -377,10 +393,12 @@ class ArticoliExplorer:
             self._add_plain_text(doc, testo_pulito)
 
         # Salva il documento nella cartella export
+        try:
+            raw_title = article["titolo_articolo"]
+        except Exception:
+            raw_title = "articolo"
         safe_title = "".join(
-            c
-            for c in (article["titolo_articolo"] or "articolo")
-            if c.isalnum() or c in (" ", "-", "_")
+            c for c in (raw_title or "articolo") if c.isalnum() or c in (" ", "-", "_")
         )[:50]
         filename = f"articolo_{article['id_articolo']}_{safe_title}.docx"
 
@@ -401,6 +419,19 @@ class ArticoliExplorer:
             else:
                 logging.error(f"Errore salvataggio: {e}")
             return None
+
+        # Mark the article as exported in the DB if requested
+        if mark_exported:
+            try:
+                self.cursor.execute(
+                    ("UPDATE t_articoli SET esportato = 1 " "WHERE id_articolo = ?"),
+                    (article["id_articolo"],),
+                )
+                self.conn.commit()
+            except Exception as e:
+                logging.error(
+                    f"Errore marcatura esportato per {article['id_articolo']}: {e}"
+                )
 
         if interactive:
             input("\n  Premi INVIO per continuare...")
@@ -461,20 +492,11 @@ class ArticoliExplorer:
                     continue
                 article = full
 
-            out = self.export_article(article, interactive=False)
+            out = self.export_article(
+                article, interactive=False, mark_exported=mark_exported
+            )
             if out:
                 exported_count += 1
-                if mark_exported:
-                    try:
-                        self.cursor.execute(
-                            "UPDATE t_articoli SET esportato = 1 WHERE id_articolo = ?",
-                            (article["id_articolo"],),
-                        )
-                        self.conn.commit()
-                    except Exception as e:
-                        logging.error(
-                            f"Errore nel marcare articolo {article['id_articolo']}: {e}"
-                        )
         logging.info(f"Esportati: {exported_count}/{total} articoli")
         return exported_count
 
