@@ -250,12 +250,17 @@ class ArticoliExplorer:
             choice = input("  Scelta: ").strip().lower()
 
             if choice == "e":
-                # Export and mark as exported
-                out = self.export_article(article, mark_exported=True)
+                # Export and mark as exported (non-blocking), then return to list
+                out = self.export_article(
+                    article, interactive=False, mark_exported=True
+                )
                 if out:
+                    self.clear_screen()
                     print(
                         "\n  ✅ Articolo esportato e contrassegnato come 'esportato'."
                     )
+                    input("\n  Premi INVIO per tornare alla lista...")
+                    break
             elif choice == "b":
                 break
             else:
