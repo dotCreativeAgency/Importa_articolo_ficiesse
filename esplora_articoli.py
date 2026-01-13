@@ -170,19 +170,22 @@ class ArticoliExplorer:
             left = f"  {i:2}. [{art['id_articolo']}] {status} {data} | {argomento:<24}"
             print(left)
 
-            # Second line: full title (wrapped if long)
+            # Second section: show title with label and wrapping
             try:
                 full_title = art["titolo_articolo"] or "N/D"
             except Exception:
                 full_title = "N/D"
 
-            # Indent and show full title; wrap to 70 chars per line
             import textwrap
 
             wrapped = textwrap.wrap(full_title, width=70)
             for j, line in enumerate(wrapped):
-                prefix = "     " if j == 0 else "     "
-                print(f"{prefix}{line}")
+                if j == 0:
+                    # first wrapped line gets the label
+                    print(f"  TITOLO: {line}")
+                else:
+                    # subsequent lines aligned with label
+                    print(f"          {line}")
 
             print("-" * 70)
 

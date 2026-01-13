@@ -9,7 +9,7 @@ if exist "venv\Scripts\activate.bat" (
     call venv\Scripts\activate.bat
 )
 
-REM Avvia lo script senza argomenti -> modalita' interattiva
-python import_articoli_to_sqlite.py
+REM Avvia il launcher e apre il menu Import senza richiedere percorso file
+python importa_articoli_app.py import
 
 pause

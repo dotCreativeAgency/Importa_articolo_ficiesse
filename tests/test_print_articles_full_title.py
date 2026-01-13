@@ -61,5 +61,6 @@ def test_print_shows_full_title(tmp_path, capsys):
 
     explorer.print_articles_list(rows)
     captured = capsys.readouterr()
-    # Ensure the long title appears in output
+    # Ensure the long title appears in output and is labeled
+    assert "TITOLO:" in captured.out
     assert "This is a very long title that should be shown in full" in captured.out

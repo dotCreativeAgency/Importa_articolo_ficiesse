@@ -11,8 +11,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Nome del database (default: articoli.db)
-DB_NAME="${1:-articoli.db}"
+# Non richiedere all'utente il percorso del DB: usiamo il launcher in modalità Export
 
 # Verifica se esiste il virtual environment
 if [ -d ".venv" ]; then
@@ -38,14 +37,14 @@ else
     echo ""
 fi
 
-# Verifica se esiste il database
-if [ ! -f "$DB_NAME" ]; then
-    echo "❌ Database '$DB_NAME' non trovato!"
+# Verifica se esiste il database di default
+if [ ! -f "articoli.db" ]; then
+    echo "❌ Database 'articoli.db' non trovato!"
     echo ""
-    echo "Usa prima lo script di importazione:"
-    echo "   ./run_import.sh t_articoli.sql"
+    echo "Usa prima lo script di importazione (o posiziona il DB nella cartella):"
+    echo "   ./import.sh"
     exit 1
 fi
 
-# Avvia l'esplorazione
-python esplora_articoli.py "$DB_NAME"
+# Avvia il launcher in modalità Export (non chiede il DB)
+python importa_articoli_app.py export

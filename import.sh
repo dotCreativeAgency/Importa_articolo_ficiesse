@@ -12,5 +12,5 @@ elif [ -d "venv" ]; then
     source venv/bin/activate
 fi
 
-# Avvia lo script senza argomenti -> modalità interattiva
-python3 import_articoli_to_sqlite.py
+# Avvia il launcher e apre il menu Import senza richiedere percorso file
+python3 importa_articoli_app.py import

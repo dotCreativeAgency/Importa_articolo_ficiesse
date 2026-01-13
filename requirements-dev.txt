@@ -1,4 +1,4 @@
 black
 flake8
 pre-commit
-mypy>=1.5
+mypy>=1.5pyinstaller>=5.1

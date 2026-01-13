@@ -41,17 +41,17 @@ if not exist "venv" (
     call venv\Scripts\activate.bat
 )
 
-REM Verifica se esiste il database
-if not exist "%DB_NAME%" (
-    echo [ERRORE] Database '%DB_NAME%' non trovato!
+REM Verifica se esiste il database di default
+if not exist "articoli.db" (
+    echo [ERRORE] Database 'articoli.db' non trovato!
     echo.
-    echo Usa prima lo script di importazione:
-    echo    run_import.bat t_articoli.sql
+    echo Usa prima lo script di importazione (o posiziona il DB nella cartella):
+    echo    import.bat
     pause
     exit /b 1
 )
 
-REM Avvia l'esplorazione
-python esplora_articoli.py "%DB_NAME%"
+REM Avvia il launcher in modalità Export (non chiede il DB)
+python importa_articoli_app.py export
 
 pause

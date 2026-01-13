@@ -6,3 +6,6 @@ export/
 articoli.db
 test_*.db
 .env
+dist/
+build/
+*.spec

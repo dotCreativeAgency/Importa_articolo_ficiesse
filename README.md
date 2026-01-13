@@ -98,6 +98,27 @@ python esplora_articoli.py articoli.db --export-all --export-only-new --export-l
 
 Nota: le funzionalità di export richiedono `python-docx` (obbligatorio) e opzionalmente `htmldocx` e `beautifulsoup4` per convertire HTML ed avere anteprime migliori.
 
+---
+
+## Distribuzione su Windows
+
+È disponibile un workflow di build che genera un eseguibile Windows usando **PyInstaller** e carica l'artefatto nel job di GitHub Actions (branch `main`). Puoi:
+- Scaricare l'eseguibile dalla sezione "Artifacts" del job "build-windows" nelle Actions per l'ultima esecuzione riuscita.
+- Oppure creare localmente l'eseguibile:
+  ```bash
+  pip install -r requirements-dev.txt
+  pyinstaller --onefile --name importa_articoli importa_articoli_app.py
+  # L'eseguibile risultante sarà in `dist/importa_articoli.exe` (o `dist/importa_articoli` su *nix)
+  ```
+
+Il launcher unificato `importa_articoli_app.py` fornisce un semplice menu per avviare l'import o l'esportazione senza uscire dall'interfaccia.
+
+Script di comodo
+- `import.sh` / `import.bat` : avviano il launcher in modalità *Import* senza richiedere il percorso del file SQL (usa la cartella `import/` per i file .sql).
+- `esplora.sh` / `esplora.bat` : avviano il launcher in modalità *Export* (usa `articoli.db` di default — non devi specificarlo).
+
+Nota: il build include le dipendenze elencate in `requirements.txt` e `requirements-dev.txt`. Se riscontri problemi con dipendenze native, apri un issue con i dettagli.
+
 ## Esempi
 
 ### Prima importazione (prime 50 righe)
