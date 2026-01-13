@@ -1,6 +1,6 @@
 # Dipendenze opzionali per funzionalità di export/parse/test
 python-docx>=0.8.11
-htmldocx>=0.3.1
+htmldocx>=0.0.6
 beautifulsoup4>=4.9.0
 # Testing
 pytest>=6.0
