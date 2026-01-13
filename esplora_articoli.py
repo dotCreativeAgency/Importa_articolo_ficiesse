@@ -435,8 +435,32 @@ class ArticoliExplorer:
 
         exported_count = 0
         for art in iterator:
-            # art can be sqlite Row; convert to dict-like access
+            # art can be a sqlite Row with limited columns (summary view)
+            # Ensure we always have a full article record before exporting
             article = art
+            try:
+                has_text = "testo_articolo" in article.keys()
+            except Exception:
+                # If it's not a mapping-like object, attempt to fetch by id positionally
+                try:
+                    article_id = article[0]
+                except Exception:
+                    logging.error("Articolo con formato inatteso, salto")
+                    continue
+                article = self.get_article_by_id(article_id)
+                if not article:
+                    logging.error(f"Articolo {article_id} non trovato, salto")
+                    continue
+                has_text = True
+
+            if not has_text:
+                article_id = article["id_articolo"]
+                full = self.get_article_by_id(article_id)
+                if not full:
+                    logging.error(f"Articolo {article_id} non trovato, salto")
+                    continue
+                article = full
+
             out = self.export_article(article, interactive=False)
             if out:
                 exported_count += 1
