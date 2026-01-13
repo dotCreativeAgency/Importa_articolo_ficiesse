@@ -158,18 +158,33 @@ class ArticoliExplorer:
         print("-" * 70)
 
         for i, art in enumerate(articles, 1):
+            # Basic metadata
             data = art["data"][:10] if art["data"] else "N/D"
-            argomento = (art["argomento"] or "N/D")[:14]
-            titolo = (art["titolo_articolo"] or "N/D")[:20]
+            argomento = (art["argomento"] or "N/D")[:24]
             exported = (
                 art.get("esportato") if isinstance(art, dict) else art["esportato"]
             )
             status = "✅" if exported else " "
 
-            left = (
-                f"  {i:2}. [{art['id_articolo']}] {status} {data} | {argomento:<14} |"
-            )
-            print(left + f" {titolo}")
+            # First line: index, id, status, date and topic
+            left = f"  {i:2}. [{art['id_articolo']}] {status} {data} | {argomento:<24}"
+            print(left)
+
+            # Second line: full title (wrapped if long)
+            try:
+                full_title = art["titolo_articolo"] or "N/D"
+            except Exception:
+                full_title = "N/D"
+
+            # Indent and show full title; wrap to 70 chars per line
+            import textwrap
+
+            wrapped = textwrap.wrap(full_title, width=70)
+            for j, line in enumerate(wrapped):
+                prefix = "     " if j == 0 else "     "
+                print(f"{prefix}{line}")
+
+            print("-" * 70)
 
         print("-" * 70)
 
@@ -235,7 +250,12 @@ class ArticoliExplorer:
             choice = input("  Scelta: ").strip().lower()
 
             if choice == "e":
-                self.export_article(article)
+                # Export and mark as exported
+                out = self.export_article(article, mark_exported=True)
+                if out:
+                    print(
+                        "\n  ✅ Articolo esportato e contrassegnato come 'esportato'."
+                    )
             elif choice == "b":
                 break
             else:
