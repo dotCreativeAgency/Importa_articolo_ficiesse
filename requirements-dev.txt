@@ -1,3 +1,4 @@
 black
 flake8
 pre-commit
+mypy>=1.5

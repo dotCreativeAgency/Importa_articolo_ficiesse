@@ -27,6 +27,9 @@ jobs:
         run: |
           black --check .
           flake8
+      - name: Run static type checks (mypy)
+        run: |
+          python -m mypy --config-file mypy.ini
       - name: Run tests
         run: |
           python -m pytest -q
