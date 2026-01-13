@@ -528,7 +528,7 @@ def check_dependencies():
         if HTMLDOCX_AVAILABLE
         else "⚠️ Non installato (export senza formattazione HTML)"
     )
-    bs_status = '✅ OK' if BS4_AVAILABLE else '⚠️ Non installato (anteprima base)'
+    bs_status = "✅ OK" if BS4_AVAILABLE else "⚠️ Non installato (anteprima base)"
     logging.info("  - htmldocx:    " + hd_status)
     logging.info("  - beautifulsoup4: " + bs_status)
 
