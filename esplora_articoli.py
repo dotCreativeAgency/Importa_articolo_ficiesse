@@ -90,10 +90,11 @@ class ArticoliExplorer:
 
     def get_articles_page(self):
         """Ritorna una pagina di articoli"""
-        query = """
-            SELECT id_articolo, data, argomento, titolo_articolo, sotto_titolo
-            FROM t_articoli
-        """
+        query = (
+            "SELECT id_articolo, data, argomento, "
+            "titolo_articolo, sotto_titolo, esportato "
+            "FROM t_articoli"
+        )
         params = []
 
         if self.current_filter:
@@ -158,12 +159,17 @@ class ArticoliExplorer:
 
         for i, art in enumerate(articles, 1):
             data = art["data"][:10] if art["data"] else "N/D"
-            argomento = (art["argomento"] or "N/D")[:20]
-            titolo = (art["titolo_articolo"] or "N/D")[:35]
-
-            print(
-                f"  {i:2}. [{art['id_articolo']:5}] {data} | {argomento:<20} | {titolo}"
+            argomento = (art["argomento"] or "N/D")[:14]
+            titolo = (art["titolo_articolo"] or "N/D")[:20]
+            exported = (
+                art.get("esportato") if isinstance(art, dict) else art["esportato"]
             )
+            status = "✅" if exported else " "
+
+            left = (
+                f"  {i:2}. [{art['id_articolo']}] {status} {data} | {argomento:<14} |"
+            )
+            print(left + f" {titolo}")
 
         print("-" * 70)
 
@@ -175,6 +181,8 @@ class ArticoliExplorer:
         print("    [p]rev    - Pagina precedente")
         print("    [f]iltra  - Filtra per argomento")
         print("    [s]earch  - Cerca per titolo")
+        print("    [e]xport  - Esporta pagina corrente")
+        print("    [a]ll     - Esporta risultati della ricerca (max 50)")
         print("    [r]eset   - Rimuovi filtri")
         print("    [q]uit    - Esci")
         print()
@@ -312,13 +320,19 @@ class ArticoliExplorer:
         )
         return len(html_tags) > 0
 
-    def export_article(self, article):
-        """Esporta l'articolo in formato DOCX"""
+    def export_article(self, article, interactive=True):
+        """Esporta l'articolo in formato DOCX.
+
+        Se interactive è False: non chiedere input; restituisci il percorso del file.
+        """
         if not DOCX_AVAILABLE:
-            print("\n  ❌ Libreria 'python-docx' non installata!")
-            print("     Installa con: pip install python-docx")
-            input("\n  Premi INVIO per continuare...")
-            return
+            if interactive:
+                print("\n  ❌ Libreria 'python-docx' non installata!")
+                print("     Installa con: pip install python-docx")
+                input("\n  Premi INVIO per continuare...")
+            else:
+                logging.error("python-docx non installato; impossibile esportare")
+            return None
 
         # Crea il documento
         doc = Document()
@@ -353,16 +367,13 @@ class ArticoliExplorer:
 
         # Verifica se è HTML vero o testo semplice
         if self._is_html_content(testo_pulito) and HTMLDOCX_AVAILABLE:
-            # È HTML: pulisci e usa htmldocx per convertire
             try:
                 testo_html = self._clean_html_for_docx(testo_pulito)
                 parser = HtmlToDocx()
                 parser.add_html_to_document(testo_html, doc)
             except Exception:
-                # Fallback silenzioso a testo semplice
                 self._add_plain_text(doc, testo_pulito)
         else:
-            # È testo semplice: aggiungi direttamente come paragrafi
             self._add_plain_text(doc, testo_pulito)
 
         # Salva il documento nella cartella export
@@ -380,11 +391,68 @@ class ArticoliExplorer:
 
         try:
             doc.save(filepath)
-            print(f"\n  ✅ Articolo esportato: export/{filename}")
+            if interactive:
+                print(f"\n  ✅ Articolo esportato: export/{filename}")
+            else:
+                logging.info(f"Esportato: export/{filename}")
         except Exception as e:
-            print(f"\n  ❌ Errore salvataggio: {e}")
+            if interactive:
+                print(f"\n  ❌ Errore salvataggio: {e}")
+            else:
+                logging.error(f"Errore salvataggio: {e}")
+            return None
 
-        input("\n  Premi INVIO per continuare...")
+        if interactive:
+            input("\n  Premi INVIO per continuare...")
+
+        return filepath
+
+    def export_articles(self, articles, mark_exported=True, limit=50):
+        """Esporta una lista di articoli (uno file DOCX per articolo).
+
+        - Limita a `limit` elementi per chiamata per evitare blocchi di memoria.
+        - Se mark_exported True, segna gli articoli come esportati nel DB.
+        """
+        total = len(articles)
+        if total == 0:
+            logging.info("Nessun articolo da esportare")
+            return 0
+
+        if total > limit:
+            logging.warning(
+                f"Tentativo di esportare {total} (limite {limit}); esporto {limit}."
+            )
+            articles = articles[:limit]
+            total = limit
+
+        # Use tqdm if available
+        try:
+            from tqdm import tqdm
+
+            iterator = tqdm(articles, total=total, unit="articolo", ncols=80)
+        except Exception:
+            iterator = articles
+
+        exported_count = 0
+        for art in iterator:
+            # art can be sqlite Row; convert to dict-like access
+            article = art
+            out = self.export_article(article, interactive=False)
+            if out:
+                exported_count += 1
+                if mark_exported:
+                    try:
+                        self.cursor.execute(
+                            "UPDATE t_articoli SET esportato = 1 WHERE id_articolo = ?",
+                            (article["id_articolo"],),
+                        )
+                        self.conn.commit()
+                    except Exception as e:
+                        logging.error(
+                            f"Errore nel marcare articolo {article['id_articolo']}: {e}"
+                        )
+        logging.info(f"Esportati: {exported_count}/{total} articoli")
+        return exported_count
 
     def _add_plain_text(self, doc, text_content):
         """Aggiunge testo semplice al documento come paragrafi"""
@@ -503,6 +571,47 @@ class ArticoliExplorer:
                         self.current_filter = None
                         self.current_page = 0
 
+                # Esporta pagina corrente
+                elif choice in ("e", "export"):
+                    if not articles:
+                        print("\n  Nessun articolo da esportare in questa pagina")
+                    else:
+                        confirm = (
+                            input(f"\n  Esportare {len(articles)} articoli? [y/N]: ")
+                            .strip()
+                            .lower()
+                        )
+                        if confirm == "y":
+                            self.export_articles(
+                                articles, mark_exported=True, limit=self.page_size
+                            )
+
+                # Esporta risultati (max 50)
+                elif choice in ("a", "all"):
+                    total_results = self.get_total_count()
+                    if total_results == 0:
+                        print("\n  Nessun articolo da esportare")
+                    elif total_results > 50:
+                        print(f"\n  Attenzione: {total_results} articoli (limite 50).")
+                        confirm = (
+                            input("  Vuoi esportare i primi 50 risultati? [y/N]: ")
+                            .strip()
+                            .lower()
+                        )
+                        if confirm == "y":
+                            # fetch first 50 results
+                            self.cursor.execute(
+                                "SELECT * FROM t_articoli ORDER BY data DESC LIMIT 50"
+                            )
+                            rows = self.cursor.fetchall()
+                            self.export_articles(rows, mark_exported=True, limit=50)
+                    else:
+                        self.cursor.execute(
+                            "SELECT * FROM t_articoli ORDER BY data DESC"
+                        )
+                        rows = self.cursor.fetchall()
+                        self.export_articles(rows, mark_exported=True, limit=50)
+
                 elif choice in ("r", "reset"):
                     self.current_filter = None
                     self.current_search = None
@@ -533,8 +642,8 @@ def check_dependencies():
     logging.info("  - beautifulsoup4: " + bs_status)
 
     if not DOCX_AVAILABLE:
-        logging.warning("\n⚠️  Per abilitare l'export in DOCX, installa le dipendenze:")
-        logging.info("   pip install python-docx htmldocx beautifulsoup4")
+        logging.warning("⚠️ Abilita export DOCX: installa python-docx, htmldocx")
+        logging.info("   e installa beautifulsoup4 (bs4) per anteprime migliori")
 
     logging.info("")
 
@@ -551,6 +660,22 @@ def main():
         "--verbose", "-v", action="store_true", help="Modalità verbosa (debug)"
     )
     parser.add_argument("--no-emoji", action="store_true", help="Output senza emoji")
+    parser.add_argument(
+        "--export-all",
+        action="store_true",
+        help="Esporta tutti gli articoli (non interattivo, limit applies)",
+    )
+    parser.add_argument(
+        "--export-only-new",
+        action="store_true",
+        help="Esporta solo articoli non ancora esportati",
+    )
+    parser.add_argument(
+        "--export-limit",
+        type=int,
+        default=50,
+        help="Limite massimo articoli per export non-interattivo",
+    )
     args = parser.parse_args()
 
     setup_logging(args.verbose, args.no_emoji)
@@ -566,10 +691,44 @@ def main():
         logging.info("   Usa: python esplora_articoli.py <database.db>")
         sys.exit(1)
 
-    input("Premi INVIO per avviare l'esplorazione...")
+    # Non-blocking: se export non interattivo, salta richiesta INVIO
+    if not args.export_all:
+        input("Premi INVIO per avviare l'esplorazione...")
 
     explorer = ArticoliExplorer(args.db)
     explorer.page_size = args.page_size
+
+    # Non-interactive export flags
+    if args.export_all:
+        if not explorer.connect():
+            sys.exit(1)
+        try:
+            only_new = args.export_only_new
+            # fetch articles
+            if only_new:
+                explorer.cursor.execute(
+                    (
+                        "SELECT * FROM t_articoli WHERE esportato = 0 "
+                        "ORDER BY data DESC LIMIT ?"
+                    ),
+                    (args.export_limit,),
+                )
+            else:
+                explorer.cursor.execute(
+                    "SELECT * FROM t_articoli ORDER BY data DESC LIMIT ?",
+                    (args.export_limit,),
+                )
+            rows = explorer.cursor.fetchall()
+            exported = explorer.export_articles(
+                rows, mark_exported=True, limit=args.export_limit
+            )
+            logging.info(
+                f"Export non-interattivo completato: {exported} articoli esportati"
+            )
+        finally:
+            explorer.close()
+        return
+
     explorer.run()
 
 

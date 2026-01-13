@@ -68,11 +68,23 @@ def create_database_and_table(db_path):
             attivo INTEGER,
             id_forum INTEGER,
             ultimo_accesso TEXT,
-            scadenza TEXT
+            scadenza TEXT,
+            esportato INTEGER DEFAULT 0
         )
     """
     )
 
+    # Ensure backward-compatible migration: add 'esportato' column if missing
+    cursor.execute("PRAGMA table_info(t_articoli)")
+    cols = [row[1] for row in cursor.fetchall()]
+    if "esportato" not in cols:
+        try:
+            cursor.execute(
+                "ALTER TABLE t_articoli ADD COLUMN esportato INTEGER DEFAULT 0"
+            )
+        except sqlite3.OperationalError:
+            # Some SQLite versions may not allow ALTER; ignore safely
+            pass
     conn.commit()
     return conn
 
