@@ -93,6 +93,7 @@ class ImportManager:
         self.skip_all_duplicates = False
         self.replace_all_duplicates = False
         self.dry_run = False
+        self.use_progress = False
         
         # Statistiche
         self.imported_count = 0
@@ -334,39 +335,75 @@ class ImportManager:
         # Seconda passata: importa con gestione duplicati
         print("-" * 70)
         
-        for i, values in enumerate(all_tuples, 1):
-            # Verifica duplicato
-            existing = self.get_existing_article(values[0])
-            
-            if existing:
-                if self.interactive and not self.skip_all_duplicates and not self.replace_all_duplicates:
-                    # Mostra progresso prima di chiedere
-                    print()  # Nuova riga per il prompt
-                    action = self.handle_duplicate(values, existing)
-                    
-                    if action == 'quit':
-                        print("\n  🛑 Importazione interrotta dall'utente")
-                        return False
-                    elif action == 'skip':
-                        self.show_progress(i, total, values)
+        if self.use_progress:
+            try:
+                from tqdm import tqdm
+            except Exception:
+                logging.warning("tqdm non disponibile, visualizzazione progressione disabilitata")
+                iter_source = enumerate(all_tuples, 1)
+            else:
+                iter_source = enumerate(tqdm(all_tuples, total=total, unit='articolo', ncols=100), 1)
+
+            for i, values in iter_source:
+                existing = self.get_existing_article(values[0])
+                
+                if existing:
+                    if self.interactive and not self.skip_all_duplicates and not self.replace_all_duplicates:
+                        # In progress mode, avoid inline prompts disrupting tqdm: temporarily disable tqdm writes
+                        print()  # Nuova riga per il prompt
+                        action = self.handle_duplicate(values, existing)
+                        
+                        if action == 'quit':
+                            print("\n  🛑 Importazione interrotta dall'utente")
+                            return False
+                        elif action == 'skip':
+                            self.skipped_count += 1
+                            continue
+                        elif action == 'replace':
+                            if self.insert_article(values):
+                                self.replaced_count += 1
+                    elif self.skip_all_duplicates:
+                        self.skipped_count += 1
                         continue
-                    elif action == 'replace':
+                    elif self.replace_all_duplicates:
                         if self.insert_article(values):
                             self.replaced_count += 1
-                elif self.skip_all_duplicates:
-                    self.skipped_count += 1
-                    self.show_progress(i, total, values)
-                    continue
-                elif self.replace_all_duplicates:
+                else:
                     if self.insert_article(values):
-                        self.replaced_count += 1
-            else:
-                # Nuovo articolo
-                if self.insert_article(values):
-                    self.imported_count += 1
-            
-            self.show_progress(i, total, values)
-        
+                        self.imported_count += 1
+        else:
+            for i, values in enumerate(all_tuples, 1):
+                # Verifica duplicato
+                existing = self.get_existing_article(values[0])
+                
+                if existing:
+                    if self.interactive and not self.skip_all_duplicates and not self.replace_all_duplicates:
+                        # Mostra progresso prima di chiedere
+                        print()  # Nuova riga per il prompt
+                        action = self.handle_duplicate(values, existing)
+                        
+                        if action == 'quit':
+                            print("\n  🛑 Importazione interrotta dall'utente")
+                            return False
+                        elif action == 'skip':
+                            self.show_progress(i, total, values)
+                            continue
+                        elif action == 'replace':
+                            if self.insert_article(values):
+                                self.replaced_count += 1
+                    elif self.skip_all_duplicates:
+                        self.skipped_count += 1
+                        self.show_progress(i, total, values)
+                        continue
+                    elif self.replace_all_duplicates:
+                        if self.insert_article(values):
+                            self.replaced_count += 1
+                else:
+                    # Nuovo articolo
+                    if self.insert_article(values):
+                        self.imported_count += 1
+                
+                self.show_progress(i, total, values)        
         print()  # Nuova riga dopo la progress bar
         return True
     
@@ -463,6 +500,7 @@ def main():
     parser.add_argument('--replace-duplicates', action='store_true', help='Replace lista duplicati')
     parser.add_argument('--verbose', '-v', action='store_true', help='Modalità verbosa (debug)')
     parser.add_argument('--no-emoji', action='store_true', help='Output senza emoji')
+    parser.add_argument('--progress', action='store_true', help='Mostra una barra di progresso con tqdm')
     args = parser.parse_args()
 
     setup_logging(args.verbose, args.no_emoji)

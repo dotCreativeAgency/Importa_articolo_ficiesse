@@ -25,13 +25,15 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Per le funzionalità opzionali (export DOCX, parsing avanzato e test) installa le dipendenze:
+Per le funzionalità opzionali (export DOCX, parsing avanzato, progress bar e test) installa le dipendenze:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Le dipendenze opzionali includono `python-docx`, `htmldocx`, `beautifulsoup4` e `pytest`.
+Le dipendenze opzionali includono `python-docx`, `htmldocx`, `beautifulsoup4`, `tqdm` e `pytest`.
+
+Nota: puoi abilitare la barra di progresso nell'import con `--progress`.
 
 ## Struttura della Tabella
 
