@@ -25,13 +25,15 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Per le funzionalità opzionali (export DOCX, parsing avanzato e test) installa le dipendenze:
+Per le funzionalità opzionali (export DOCX, parsing avanzato, progress bar e test) installa le dipendenze:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Le dipendenze opzionali includono `python-docx`, `htmldocx`, `beautifulsoup4` e `pytest`.
+Le dipendenze opzionali includono `python-docx`, `htmldocx`, `beautifulsoup4`, `tqdm` e `pytest`.
+
+Nota: puoi abilitare la barra di progresso nell'import con `--progress`.
 
 ## Struttura della Tabella
 
@@ -72,6 +74,29 @@ python import_articoli_to_sqlite.py t_articoli_1.sql --db articoli.db --dry-run 
 
 - `<file_sql>`: **Obbligatorio** - Percorso del file SQL da importare
 - `[nome_database.db]`: **Opzionale** - Nome del database SQLite (default: `articoli.db`)
+
+## Esplorazione ed export DOCX
+
+Lo script `esplora_articoli.py` offre un'interfaccia terminale per navigare e esportare articoli in DOCX.
+
+Flags principali:
+
+- `--page-size N` : imposta il numero di articoli per pagina nell'esploratore
+- `--export-all` : esegue l'export non interattivo dei risultati (uno file DOCX per articolo)
+- `--export-only-new` : quando usato con `--export-all`, esporta solo articoli non ancora marcati come "esportato" (colonna `esportato`)
+- `--export-limit N` : numero massimo di articoli da esportare in una singola invocazione (default: 50; server-side enforced)
+
+Comportamenti importanti:
+- Ogni articolo esportato viene marcato con `esportato = 1` per evitare duplicati futuri se `--export-only-new` è usato.
+- Il limite massimo di export per chiamata è **50** (per evitare blocchi o uso eccessivo di memoria). Se si richiede più di 50, verranno esportati solo i primi 50.
+
+Esempio non-interattivo (esporta solo articoli non ancora esportati):
+
+```bash
+python esplora_articoli.py articoli.db --export-all --export-only-new --export-limit 20
+```
+
+Nota: le funzionalità di export richiedono `python-docx` (obbligatorio) e opzionalmente `htmldocx` e `beautifulsoup4` per convertire HTML ed avere anteprime migliori.
 
 ## Esempi
 
