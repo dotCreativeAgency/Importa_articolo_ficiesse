@@ -28,7 +28,7 @@ jobs:
           pyinstaller --onefile --name importa_articoli importa_articoli_app.py
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: importa_articoli-windows
           path: dist/*
