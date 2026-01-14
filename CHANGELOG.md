@@ -2,6 +2,21 @@
 
 Tutte le modifiche rilevanti al progetto vengono elencate qui.
 
+## v0.2.0 — 2026-01-14
+
+### Build e Distribuzione
+- ✨ Nuovo script unificato `build.sh`/`build.bat` per creazione eseguibili
+- ✨ Gestione automatica virtual environment e dipendenze (come `app.sh`)
+- ✨ Opzioni avanzate: `--clean` (pulizia) e `--test` (validazione build)
+- 📖 Nuova documentazione completa: `BUILD.md`
+- 🔧 Script legacy deprecati con warning e redirect
+
+### Miglioramenti
+- ✅ Build process semplificato e user-friendly
+- ✅ Cross-platform consistency (Linux/Windows)
+- ✅ Documentazione README aggiornata con sezione build
+- ✅ Output dettagliato con emoji e statistiche
+
 ## v0.1.0 — 2026-01-13
 
 - Aggiunta barra di progresso per import (`tqdm`) per seguire l'avanzamento
