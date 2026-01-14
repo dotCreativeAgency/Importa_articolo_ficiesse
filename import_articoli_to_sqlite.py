@@ -275,8 +275,12 @@ class ImportManager:
                 return True
             self.cursor.execute(
                 """
-                INSERT OR REPLACE INTO t_articoli
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT OR REPLACE INTO t_articoli (
+                    id_articolo, data, argomento, titolo_articolo, sotto_titolo,
+                    TITLE, testo_articolo, nr_attach, titolo_foto, foto_path,
+                    link_esterno, contatore_visite, attivo, id_forum,
+                    ultimo_accesso, scadenza
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 values,
             )

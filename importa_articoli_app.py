@@ -10,10 +10,16 @@ from __future__ import annotations
 
 import importlib
 import logging
+import os
 import sys
 from typing import Sequence
 
 logging.basicConfig(level=logging.INFO)
+
+
+def clear_screen() -> None:
+    """Pulisce lo schermo del terminale."""
+    os.system("clear" if os.name == "posix" else "cls")
 
 
 def safe_run_module_main(module_name: str, argv: Sequence[str] | None = None) -> None:
@@ -43,33 +49,47 @@ def safe_run_module_main(module_name: str, argv: Sequence[str] | None = None) ->
 
 def prompt_menu() -> None:
     while True:
-        print("\n=== Importa & Esporta Articoli — Menu Principale ===")
-        print("1) Importa nuovi articoli (da file .sql)")
-        print("2) Esplora / Esporta articoli (DOCX)")
-        print("3) Esci")
-        choice = input("Seleziona un'opzione (1-3): ").strip()
+        clear_screen()
+        print("\n" + "=" * 60)
+        print("  📦 IMPORTA & ESPORTA ARTICOLI — Menu Principale")
+        print("=" * 60)
+        print()
+        print("  1) 📥 Importa nuovi articoli (da file .sql)")
+        print("  2) 📰 Esplora / Esporta articoli (DOCX)")
+        print("  3) 🚪 Esci")
+        print()
+        print("-" * 60)
+        choice = input("  Seleziona un'opzione (1-3): ").strip()
 
         if choice == "1":
-            # Lancia lo script di import. Chiediamo se l'utente vuole passare file
+            clear_screen()
             sql = input(
-                "Percorso file SQL (lascia vuoto per scegliere interattivamente): "
+                "  Percorso file SQL (lascia vuoto per menu interattivo): "
             ).strip()
             if sql:
                 safe_run_module_main("import_articoli_to_sqlite", [sql])
             else:
                 safe_run_module_main("import_articoli_to_sqlite", [])
+            # Pausa prima di tornare al menu
+            print()
+            input("  Premi INVIO per tornare al menu principale...")
 
         elif choice == "2":
-            db = input("Database (default: articoli.db): ").strip() or "articoli.db"
-            # Passiamo il nome del DB come primo argomento
+            clear_screen()
+            db = input("  Database (default: articoli.db): ").strip() or "articoli.db"
             safe_run_module_main("esplora_articoli", [db])
+            # Pausa prima di tornare al menu
+            print()
+            input("  Premi INVIO per tornare al menu principale...")
 
         elif choice == "3":
-            print("Uscita. A presto!")
+            clear_screen()
+            print("\n  👋 Uscita. A presto!\n")
             return
 
         else:
-            print("Scelta non valida, riprova.")
+            print("\n  ⚠️  Scelta non valida, riprova.")
+            input("  Premi INVIO per continuare...")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -81,9 +101,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         # Simple dispatch for direct invocation
         # --import can be passed with or without a filename
         if argv[0] in ("--import", "import"):
+            clear_screen()
             safe_run_module_main("import_articoli_to_sqlite", argv[1:])
             return 0
         if argv[0] in ("--export", "export"):
+            clear_screen()
             # support optional db path
             dbarg = argv[1:] if len(argv) >= 2 else []
             safe_run_module_main("esplora_articoli", dbarg)
@@ -93,7 +115,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         prompt_menu()
         return 0
     except KeyboardInterrupt:
-        print("\nInterrotto dall'utente. Arrivederci.")
+        clear_screen()
+        print("\n  ⚠️  Interrotto dall'utente. Arrivederci.\n")
         return 2
 
 
