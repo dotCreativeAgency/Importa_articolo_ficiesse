@@ -100,16 +100,58 @@ Nota: le funzionalità di export richiedono `python-docx` (obbligatorio) e opzio
 
 ---
 
-## Distribuzione su Windows
+## Distribuzione ed Eseguibili
 
-È disponibile un workflow di build che genera un eseguibile Windows usando **PyInstaller** e carica l'artefatto nel job di GitHub Actions (branch `main`). Puoi:
-- Scaricare l'eseguibile dalla sezione "Artifacts" del job "build-windows" nelle Actions per l'ultima esecuzione riuscita.
-- Oppure creare localmente l'eseguibile:
-  ```bash
-  pip install -r requirements-dev.txt
-  pyinstaller --onefile --name importa_articoli importa_articoli_app.py
-  # L'eseguibile risultante sarà in `dist/importa_articoli.exe` (o `dist/importa_articoli` su *nix)
-  ```
+### 🔨 Build Locali
+
+Per creare eseguibili autonomi (standalone) usa gli script di build unificati:
+
+```bash
+# Linux/macOS - Build completo con gestione automatica ambiente
+./build.sh
+
+# Windows - Build completo con gestione automatica ambiente  
+build.bat
+
+# Con opzioni avanzate
+./build.sh --clean --test    # Linux: pulisci e testa
+build.bat clean test         # Windows: pulisci e testa
+```
+
+Gli script replicano il comportamento di [`app.sh`](app.sh)/[`app.bat`](app.bat):
+- ✅ Gestione automatica virtual environment
+- ✅ Installazione automatica dipendenze
+- ✅ Validazione prerequisiti e PyInstaller
+- ✅ Output dettagliato con statistiche
+
+**📖 Per documentazione completa vedi [BUILD.md](BUILD.md)**
+
+### 🤖 Build Automatici (Windows)
+
+È disponibile un workflow GitHub Actions che genera automaticamente l'eseguibile Windows:
+
+- **Trigger**: Push su `main` o manuale via "workflow_dispatch"
+- **Output**: Artifact `importa_articoli-windows` scaricabile dalle Actions
+- **Processo**: Python 3.11 + PyInstaller su Windows runner
+
+**Come usare:**
+1. Vai su **Actions** → "Build Windows executable"
+2. Clicca "Run workflow" per build manuale
+3. Scarica l'artifact al completamento
+
+### 📦 Build Manuali (Avanzato)
+
+Per utenti esperti sono disponibili script legacy:
+
+```bash
+# Metodo diretto (richiede PyInstaller già configurato)
+pip install -r requirements-dev.txt
+pyinstaller --onefile --name importa_articoli importa_articoli_app.py
+```
+
+L'eseguibile risultante sarà in:
+- **Windows**: `dist/importa_articoli.exe`  
+- **Linux/macOS**: `dist/importa_articoli`
 
 Il launcher unificato `importa_articoli_app.py` fornisce un semplice menu per avviare l'import o l'esportazione senza uscire dall'interfaccia.
 
