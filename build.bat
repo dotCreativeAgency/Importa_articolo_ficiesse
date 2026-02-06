@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 REM Script batch per creare l'eseguibile Windows
 REM Si comporta come app.bat: gestisce virtual environment e dipendenze automaticamente
 REM

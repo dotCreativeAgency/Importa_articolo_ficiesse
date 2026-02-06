@@ -20,6 +20,7 @@ import os
 import argparse
 import logging
 import lib.parser as parser
+from lib.console import setup_console, set_emoji_mode
 
 
 def get_script_dir():
@@ -32,6 +33,8 @@ def setup_logging(verbose=False, no_emoji=False):
     level = logging.DEBUG if verbose else logging.INFO
     fmt = "%(message)s"
     logging.basicConfig(level=level, format=fmt)
+    if no_emoji:
+        set_emoji_mode(False)
 
 
 def get_import_dir():
@@ -534,6 +537,9 @@ class ImportManager:
 
 
 def main():
+    # Configura console per UTF-8 su Windows
+    setup_console()
+
     import_dir = get_import_dir()
 
     # Crea la cartella import se non esiste

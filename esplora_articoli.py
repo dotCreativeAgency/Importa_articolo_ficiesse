@@ -15,12 +15,15 @@ import sys
 import os
 import argparse
 import logging
+from lib.console import setup_console, set_emoji_mode
 
 
 def setup_logging(verbose=False, no_emoji=False):
     level = logging.DEBUG if verbose else logging.INFO
     fmt = "%(message)s"
     logging.basicConfig(level=level, format=fmt)
+    if no_emoji:
+        set_emoji_mode(False)
 
 
 try:
@@ -723,6 +726,9 @@ def check_dependencies():
 
 
 def main():
+    # Configura console per UTF-8 su Windows
+    setup_console()
+
     parser = argparse.ArgumentParser(description="Esplora il database degli articoli")
     parser.add_argument(
         "db", nargs="?", default="articoli.db", help="Percorso del database SQLite"

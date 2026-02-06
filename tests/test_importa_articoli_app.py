@@ -17,7 +17,7 @@ def test_menu_dispatch_import(monkeypatch, capsys):
         ),
     )
 
-    inputs = iter(["1", "", "3"])
+    inputs = iter(["1", "", "", "3"])
     monkeypatch.setattr("builtins.input", lambda prompt="": next(inputs))
 
     import importa_articoli_app as app
@@ -42,7 +42,7 @@ def test_menu_dispatch_export(monkeypatch, capsys):
         ),
     )
 
-    inputs = iter(["2", "", "3"])
+    inputs = iter(["2", "", "", "3"])
     monkeypatch.setattr("builtins.input", lambda prompt="": next(inputs))
 
     import importa_articoli_app as app

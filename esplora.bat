@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 REM Script per avviare l'esplorazione articoli con il virtual environment
 REM
 REM Uso:

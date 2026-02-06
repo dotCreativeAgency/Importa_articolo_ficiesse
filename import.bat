@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 REM Script per avviare l'import interattivo
 REM Mostra un menu per scegliere quale file importare
 

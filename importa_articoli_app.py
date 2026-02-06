@@ -14,6 +14,8 @@ import os
 import sys
 from typing import Sequence
 
+from lib.console import setup_console
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -95,6 +97,9 @@ def prompt_menu() -> None:
 def main(argv: Sequence[str] | None = None) -> int:
     """Entry point principale. Se vengono passati argomenti, prova a interpretare
     comandi rapidi per saltare il menu (es. `--import file.sql` o `--export db.db`)."""
+    # Configura console per UTF-8 su Windows
+    setup_console()
+
     argv = list(argv) if argv is not None else sys.argv[1:]
 
     if argv:

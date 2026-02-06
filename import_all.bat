@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 REM Script per importare tutti i file SQL dalla cartella import
 REM 
 REM Uso:

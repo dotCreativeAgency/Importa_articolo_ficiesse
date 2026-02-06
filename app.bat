@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 REM Script per avviare l'applicazione unificata Import & Esplora Articoli
 REM Mostra un menu principale per scegliere tra importazione e esplorazione
 REM
